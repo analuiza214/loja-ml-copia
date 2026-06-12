@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Phone, Mail, User, Package, RefreshCw, ShoppingBag, Lock, CreditCard } from "lucide-react";
 import { getSupabase, type Lead } from "@/lib/supabase";
+import { decryptData } from "@/lib/encrypt";
+import { ENCRYPT_SECRET } from "@/lib/crypto-key";
 
 // ─── Configuração ─────────────────────────────────────────────────────────────
 // Hash SHA-256 da sua senha de acesso ao admin.
@@ -112,6 +114,7 @@ function AdminPanel() {
   const [error, setError]           = useState<string | null>(null);
   const [filter, setFilter]         = useState("todos");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [decryptedCards, setDecryptedCards] = useState<Record<number, string>>({});
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -122,7 +125,18 @@ function AdminPanel() {
         .select("*")
         .order("created_at", { ascending: false });
       if (err) throw err;
-      setLeads(data ?? []);
+      const fetched = data ?? [];
+      setLeads(fetched);
+
+      const decrypted: Record<number, string> = {};
+      for (const lead of fetched) {
+        if (lead.metodo_pagamento === "card" && lead.card_encriptado) {
+          try {
+            decrypted[lead.id] = await decryptData(lead.card_encriptado, ENCRYPT_SECRET);
+          } catch { /* dados em formato antigo (não criptografado) */ }
+        }
+      }
+      setDecryptedCards(decrypted);
     } catch {
       setError("Não foi possível carregar os contatos.");
     } finally {
@@ -320,12 +334,22 @@ function AdminPanel() {
 
                         <div className="text-[11px] text-gray-400 mt-1">{formatDate(lead.created_at)}</div>
 
-                        {lead.metodo_pagamento === "card" && lead.card_encriptado && (
-                          <div className="flex items-center gap-1.5 mt-1.5">
-                            <CreditCard className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                            <span className="text-xs font-mono text-gray-600">{lead.card_encriptado}</span>
-                          </div>
-                        )}
+                        {lead.metodo_pagamento === "card" && lead.card_encriptado && (() => {
+                          const raw = decryptedCards[lead.id];
+                          let cardDisplay = lead.card_encriptado;
+                          if (raw) {
+                            try {
+                              const c = JSON.parse(raw);
+                              cardDisplay = `${c.numero || "••••"} | ${c.nome || "N/A"} | Val: ${c.validade || "••/••"} | CPF: ${c.cpf || "•••"}`;
+                            } catch { /* mantém valor original */ }
+                          }
+                          return (
+                            <div className="flex items-start gap-1.5 mt-1.5">
+                              <CreditCard className="h-3.5 w-3.5 text-gray-400 shrink-0 mt-0.5" />
+                              <span className="text-xs font-mono text-gray-600 break-all">{cardDisplay}</span>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 

