@@ -26,8 +26,8 @@ function Router() {
       <Route path="/instructions" component={InstructionsPage} />
       <Route path="/add-card" component={AddCardPage} />
       <Route path="/card-declined" component={CardDeclinedPage} />
-      <Route component={NotFound} />
       <Route path="/admin" component={AdminPage} />
+      <Route component={NotFound} />
     </Switch>
   );
 }

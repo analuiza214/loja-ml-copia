@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Phone, Mail, User, Package, RefreshCw, ShoppingBag, Lock, CreditCard } from "lucide-react";
-import { supabase, type Lead } from "@/lib/supabase";
+import { getSupabase, type Lead } from "@/lib/supabase";
 
 // ─── Configuração ─────────────────────────────────────────────────────────────
 // Hash SHA-256 da sua senha de acesso ao admin.
@@ -117,7 +117,7 @@ function AdminPanel() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: err } = await supabase
+      const { data, error: err } = await getSupabase()
         .from("leads")
         .select("*")
         .order("created_at", { ascending: false });
@@ -135,7 +135,7 @@ function AdminPanel() {
   const updateStatus = async (id: number, status: string) => {
     setUpdatingId(id);
     try {
-      const { error: err } = await supabase
+      const { error: err } = await getSupabase()
         .from("leads")
         .update({ status, updated_at: new Date().toISOString() })
         .eq("id", id);
