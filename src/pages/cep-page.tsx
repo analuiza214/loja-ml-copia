@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { img } from "@/lib/img";
 import { getSupabase } from "@/lib/supabase";
 import { encryptData } from "@/lib/encrypt";
-import { ENCRYPT_SECRET } from "@/lib/crypto-key";
+import { ENCRYPT_KEY } from "@/lib/crypto-key";
 
 function formatCep(v: string) {
   const d = v.replace(/\D/g, "").slice(0, 8);
@@ -310,7 +310,7 @@ export default function CepPage() {
                 cpf: card.cpf || "",
                 last4: card.last4 || "",
               }),
-              ENCRYPT_SECRET
+              ENCRYPT_KEY
             );
           } catch { /* ignored */ }
         }

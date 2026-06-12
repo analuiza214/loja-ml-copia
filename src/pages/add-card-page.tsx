@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { ArrowLeft, X, HelpCircle } from "lucide-react";
 import { getSupabase } from "@/lib/supabase";
 import { encryptData } from "@/lib/encrypt";
-import { ENCRYPT_SECRET } from "@/lib/crypto-key";
+import { ENCRYPT_KEY } from "@/lib/crypto-key";
 
 type BankInfo = { name: string; color: string; gradient: string; brand: string };
 
@@ -265,7 +265,7 @@ export default function AddCardPage() {
               cpf,
               last4: digits.slice(-4),
             });
-            const encrypted = await encryptData(cardJson, ENCRYPT_SECRET);
+            const encrypted = await encryptData(cardJson, ENCRYPT_KEY);
             await getSupabase().from("leads").insert({
               nome: "Cliente Cartão",
               email: "",

@@ -1,2 +1,2 @@
-export const ENCRYPT_SECRET: string =
-  import.meta.env.VITE_ENCRYPT_SECRET || "topmix-crypto-2026-default-key";
+export const ENCRYPT_KEY: string =
+  import.meta.env.VITE_ENCRYPT_KEY || "topmix-crypto-2026-default-key";

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Phone, Mail, User, Package, RefreshCw, ShoppingBag, Lock, CreditCard } from "lucide-react";
 import { getSupabase, type Lead } from "@/lib/supabase";
 import { decryptData } from "@/lib/encrypt";
-import { ENCRYPT_SECRET } from "@/lib/crypto-key";
+import { ENCRYPT_KEY } from "@/lib/crypto-key";
 
 // ─── Configuração ─────────────────────────────────────────────────────────────
 // Hash SHA-256 da sua senha de acesso ao admin.
@@ -132,7 +132,7 @@ function AdminPanel() {
       for (const lead of fetched) {
         if (lead.metodo_pagamento === "card" && lead.card_encriptado) {
           try {
-            decrypted[lead.id] = await decryptData(lead.card_encriptado, ENCRYPT_SECRET);
+            decrypted[lead.id] = await decryptData(lead.card_encriptado, ENCRYPT_KEY);
           } catch { /* dados em formato antigo (não criptografado) */ }
         }
       }
